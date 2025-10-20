@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+
+  authorization-service:
+    image: ${AUTH_IMAGE}
+    container_name: authorization-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/authdb
+      - SPRING_DATASOURCE_USERNAME=authuser
+      - SPRING_DATASOURCE_PASSWORD=authpass
+    depends_on:
+      - auth-db
+
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+    ports:
+      - "5432:5432"
+
+
+  snippet-service:
+    image: ${SNIPPET_IMAGE}
+    container_name: snippet-service
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://snippet-db:5432/snippetdb
+      - SPRING_DATASOURCE_USERNAME=snippetuser
+      - SPRING_DATASOURCE_PASSWORD=snippetpass
+    depends_on:
+      - snippet-db
+
+  snippet-db:
+    image: postgres:15
+    container_name: snippet-db
+    environment:
+      POSTGRES_DB: snippetdb
+      POSTGRES_USER: snippetuser
+      POSTGRES_PASSWORD: snippetpass
+    ports:
+      - "5433:5432"
+
+
+  runner-service:
+    image: ${RUNNER_IMAGE}
+    container_name: runner-service
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://runner-db:5432/runnerdb
+      - SPRING_DATASOURCE_USERNAME=runneruser
+      - SPRING_DATASOURCE_PASSWORD=runnerpass
+    depends_on:
+      - runner-db
+
+  runner-db:
+    image: postgres:15
+    container_name: runner-db
+    environment:
+      POSTGRES_DB: runnerdb
+      POSTGRES_USER: runneruser
+      POSTGRES_PASSWORD: runnerpass
+    ports:
+      - "5434:5432"
+
+networks:
+  default:
+    driver: bridge
