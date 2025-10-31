@@ -1,4 +1,4 @@
-name: "Continuous Deployment"
+name: "Continuous Deployment Dev"
 
 on:
   push:
@@ -9,17 +9,31 @@ jobs:
   deploy_to_vm:
     runs-on: ubuntu-latest
     steps:
-      - name: Update service on VM with new image
+      - name: Determine service
+        id: service
+        run: |
+          echo "REPO_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "CHANGED_SERVICE=$REPO_NAME" >> $GITHUB_ENV
+
+      - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST_DEV }}
           username: ${{ secrets.VM_USER_DEV }}
           key: ${{ secrets.VM_KEY_DEV }}
           script: |
-            pwd
             cd infra
             git pull origin dev
-            sudo echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login -u ${{ github.actor }} --password-stdin ghcr.io
-            sudo docker-compose -f docker-compose.dev.yml down
-            sudo docker-compose -f docker-compose.dev.yml pull
-            sudo docker-compose -f docker-compose.dev.yml up -d
+
+            # Login a GHCR como root para usar sudo docker
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
+
+    
+            if [ "${CHANGED_SERVICE}" = "infra" ]; then
+              sudo docker-compose -f docker-compose.dev.yml down
+              sudo docker-compose -f docker-compose.dev.yml pull
+              sudo docker-compose -f docker-compose.dev.yml up -d
+            else
+              sudo docker-compose -f docker-compose.dev.yml pull ${CHANGED_SERVICE}-service
+              sudo docker-compose -f docker-compose.dev.yml up -d ${CHANGED_SERVICE}-service
+            fi

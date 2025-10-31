@@ -3,7 +3,7 @@ version: '3.9'
 services:
 
   authorization-service:
-    image: ghcr.io/ingsis25/authorization-service:latest
+    image: ghcr.io/ingsis25/authorization-service:prod
     container_name: authorization-service
     ports:
       - "8080:8080"
@@ -25,7 +25,7 @@ services:
 
 
   snippet-service:
-    image: ghcr.io/ingsis25/snippet-service:latest
+    image: ghcr.io/ingsis25/snippet-service:prod
     container_name: snippet-service
     ports:
       - "8081:8080"
@@ -48,7 +48,7 @@ services:
 
 
   runner-service:
-    image: ghcr.io/ingsis25/runner-service:latest
+    image: ghcr.io/ingsis25/runner-service:prod
     container_name: runner-service
     ports:
       - "8082:8080"
