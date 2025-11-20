@@ -8,7 +8,7 @@ services:
       - "6379:6379"
 
   authorization-service:
-    image: ghcr.io/ingsis25/authorization-service:latest
+    image: ghcr.io/ingsis25/authorization-service:prod
     container_name: authorization-service
     ports:
       - "8080:8080"
@@ -33,7 +33,7 @@ services:
 
 
   snippet-service:
-    image: ghcr.io/ingsis25/snippet-service:latest
+    image: ghcr.io/ingsis25/snippet-service:prod
     container_name: snippet-service
     ports:
       - "8081:8080"
@@ -59,7 +59,7 @@ services:
 
 
   runner-service:
-    image: ghcr.io/ingsis25/runner-service:latest
+    image: ghcr.io/ingsis25/runner-service:prod
     container_name: runner-service
     ports:
       - "8082:8080"
@@ -82,6 +82,17 @@ services:
       POSTGRES_PASSWORD: runnerpass
     ports:
       - "5434:5432"
+
+  asset-service:
+    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
+    container_name: asset-service
+    ports:
+      - "8083:8080"
+    environment:
+      - STORAGE_BUCKET_PATH=/data
+    volumes:
+      - ./data:/data
+
 
 networks:
   default:
