@@ -18,9 +18,9 @@ jobs:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_HOST_DEV }}
-          username: ${{ secrets.VM_USER_DEV }}
-          key: ${{ secrets.VM_KEY_DEV }}
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_KEY }}
           script: |
             cd infra
             git pull origin dev
