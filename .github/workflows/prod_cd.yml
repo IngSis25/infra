@@ -33,10 +33,10 @@ jobs:
 
 
             if [ "${CHANGED_SERVICE}" = "infra" ]; then
-              sudo docker-compose -f docker-compose.prod.yml down
-              sudo docker-compose -f docker-compose.prod.yml pull
-              sudo docker-compose -f docker-compose.prod.yml up -d
+              sudo docker compose -f docker-compose.prod.yml down
+              sudo docker compose -f docker-compose.prod.yml pull
+              sudo docker compose -f docker-compose.prod.yml up -d
             else
-              sudo docker-compose -f docker-compose.prod.yml pull ${CHANGED_SERVICE}-service
-              sudo docker-compose -f docker-compose.prod.yml up -d ${CHANGED_SERVICE}-service
+              sudo docker compose -f docker-compose.prod.yml pull ${CHANGED_SERVICE}-service
+              sudo docker compose -f docker-compose.prod.yml up -d ${CHANGED_SERVICE}-service
             fi
