@@ -1,9 +1,13 @@
-version: '3.9'
-
 services:
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
   authorization-service:
-    image: ghcr.io/ingsis25/authorization-service-dev:dev
+    image: ghcr.io/ingsis25/authorization-service:dev
     container_name: authorization-service
     ports:
       - "8080:8080"
@@ -11,8 +15,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_AUTHDB}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_AUTHDB}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_AUTHDB}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - auth-db
+      - redis
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -25,7 +32,7 @@ services:
 
 
   snippet-service:
-    image: ghcr.io/ingsis25/snippet-service-dev:dev
+    image: ghcr.io/ingsis25/snippet-service:dev
     container_name: snippet-service
     ports:
       - "8081:8080"
@@ -33,8 +40,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_SNIPPET}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_SNIPPET}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_SNIPPET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - snippet-db
+      - redis
 
   snippet-db:
     image: postgres:15
@@ -48,7 +58,7 @@ services:
 
 
   runner-service:
-    image: ghcr.io/ingsis25/runner-service-dev:dev
+    image: ghcr.io/ingsis25/runner-service:dev
     container_name: runner-service
     ports:
       - "8082:8080"
@@ -56,8 +66,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_RUNNER}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_RUNNER}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_RUNNER}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - runner-db
+      - redis
 
   runner-db:
     image: postgres:15
@@ -69,20 +82,6 @@ services:
     ports:
       - "5434:5432"
 
-  asset-service:
-    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
-    container_name: asset-service
-    ports:
-      - "8083:8080"
-    environment:
-      - STORAGE_BUCKET_PATH=/data
-    volumes:
-      - ./data:/data
-
-
 networks:
   default:
     driver: bridge
-
-
-
