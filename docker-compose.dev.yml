@@ -1,5 +1,11 @@
 services:
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
   authorization-service:
     image: ghcr.io/ingsis25/authorization-service:dev
     container_name: authorization-service
@@ -9,8 +15,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_AUTHDB}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_AUTHDB}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_AUTHDB}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - auth-db
+      - redis
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -31,8 +40,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_SNIPPET}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_SNIPPET}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_SNIPPET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - snippet-db
+      - redis
 
   snippet-db:
     image: postgres:15
@@ -54,8 +66,11 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_RUNNER}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_RUNNER}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_RUNNER}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - runner-db
+      - redis
 
   runner-db:
     image: postgres:15
