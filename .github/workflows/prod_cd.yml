@@ -11,6 +11,7 @@ on:
 jobs:
   deploy_to_vm:
     runs-on: ubuntu-latest
+
     steps:
       - name: Determine service
         id: service
@@ -24,19 +25,23 @@ jobs:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.VM_KEY_PROD }}
+
+          # 👇 MUY IMPORTANTE: pasar la env var al host remoto
+          envs: CHANGED_SERVICE
+
           script: |
             cd infra
             git pull origin main
 
-
             echo ${{ secrets.GITHUB_TOKEN }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
 
-
-            if [ "${CHANGED_SERVICE}" = "infra" ]; then
+            if [ -z "${CHANGED_SERVICE}" ] || [ "${CHANGED_SERVICE}" = "infra" ]; then
+              echo "Redeploy completo de infra"
               sudo docker compose -f docker-compose.prod.yml down
               sudo docker compose -f docker-compose.prod.yml pull
               sudo docker compose -f docker-compose.prod.yml up -d
             else
-              sudo docker compose -f docker-compose.prod.yml pull ${CHANGED_SERVICE}-service
-              sudo docker compose -f docker-compose.prod.yml up -d ${CHANGED_SERVICE}-service
+              echo "Redeploy solo de ${CHANGED_SERVICE}-service"
+              sudo docker compose -f docker-compose.prod.yml pull "${CHANGED_SERVICE}-service"
+              sudo docker compose -f docker-compose.prod.yml up -d "${CHANGED_SERVICE}-service"
             fi
