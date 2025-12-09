@@ -11,6 +11,8 @@ services:
       - authorization-service
       - snippet-service
       - runner-service
+    networks:
+      - printscript-net
     restart: unless-stopped
 
   ui-service:
@@ -18,11 +20,15 @@ services:
     container_name: ui-service
     expose:
       - "80"
+    networks:
+      - printscript-net
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: redis
+    networks:
+      - printscript-net
     restart: unless-stopped
 
   authorization-service:
@@ -30,14 +36,21 @@ services:
     container_name: authorization-service
 
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_AUTHDB}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_AUTHDB}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_AUTHDB}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_AUTHDB}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_AUTHDB}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_AUTHDB}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Searcher
+      AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
+      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
+      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
     depends_on:
       - auth-db
       - redis
+    networks:
+      - printscript-net
 
   auth-db:
     image: postgres:15
@@ -46,6 +59,8 @@ services:
       POSTGRES_DB: authdb
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: authpass
+    networks:
+      - printscript-net
 
 
   snippet-service:
@@ -54,14 +69,18 @@ services:
     # ports:
     #   - "8081:8080"
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_SNIPPET}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_SNIPPET}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_SNIPPET}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_SNIPPET}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_SNIPPET}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_SNIPPET}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Searcher
     depends_on:
       - snippet-db
       - redis
+    networks:
+      - printscript-net
 
   snippet-db:
     image: postgres:15
@@ -70,6 +89,8 @@ services:
       POSTGRES_DB: snippetdb
       POSTGRES_USER: snippetuser
       POSTGRES_PASSWORD: snippetpass
+    networks:
+      - printscript-net
     # ports:
     #   - "5433:5432"
 
@@ -79,25 +100,19 @@ services:
     # ports:
     #   - "8082:8080"
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_RUNNER}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_RUNNER}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_RUNNER}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_RUNNER}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_RUNNER}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_RUNNER}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Searcher
     depends_on:
-      - runner-db
       - redis
+    networks:
+      - printscript-net
 
-  runner-db:
-    image: postgres:15
-    container_name: runner-db
-    environment:
-      POSTGRES_DB: runnerdb
-      POSTGRES_USER: runneruser
-      POSTGRES_PASSWORD: runnerpass
-    # ports:
-    #   - "5434:5432"
 
 networks:
-  default:
-    driver: bridge
+  printscript-net:
+    external: true

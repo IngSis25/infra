@@ -22,7 +22,7 @@ services:
       - asset-service
       - redis
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
 
@@ -30,32 +30,37 @@ services:
     image: ghcr.io/ingsis25/printscript-ui:latest
     container_name: ui-service
     expose:
-      - "80"           # visible solo dentro de Docker
+      - "80"          # visible solo dentro de Docker
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: redis
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   authorization-service:
     image: ghcr.io/ingsis25/authorization-service:prod
     container_name: authorization-service
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_AUTHDB}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_AUTHDB}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_AUTHDB}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_AUTHDB}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_AUTHDB}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_AUTHDB}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Search
+      AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
+      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
+      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
     depends_on:
       - auth-db
       - redis
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   auth-db:
@@ -66,23 +71,25 @@ services:
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: authpass
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   snippet-service:
     image: ghcr.io/ingsis25/snippet-service:prod
     container_name: snippet-service
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_SNIPPET}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_SNIPPET}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_SNIPPET}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_SNIPPET}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_SNIPPET}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_SNIPPET}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Searcher
     depends_on:
       - snippet-db
       - redis
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   snippet-db:
@@ -93,23 +100,24 @@ services:
       POSTGRES_USER: snippetuser
       POSTGRES_PASSWORD: snippetpass
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   runner-service:
     image: ghcr.io/ingsis25/runner-service:prod
     container_name: runner-service
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL_RUNNER}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME_RUNNER}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_RUNNER}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_RUNNER}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_RUNNER}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_RUNNER}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: Snippet Searcher
     depends_on:
-      - runner-db
       - redis
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   runner-db:
@@ -120,7 +128,7 @@ services:
       POSTGRES_USER: runneruser
       POSTGRES_PASSWORD: runnerpass
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
   asset-service:
@@ -129,13 +137,15 @@ services:
     expose:
       - "8080"
     environment:
-      - STORAGE_BUCKET_PATH=/data
+      STORAGE_BUCKET_PATH: /data
+      NEW_RELIC_APP_NAME: asset-service
+      NEW_RELIC_AGENT_ENABLED: false
     volumes:
       - ./data:/data
     networks:
-      - app-net
+      - printscript-net
     restart: unless-stopped
 
 networks:
-  app-net:
-    driver: bridge
+  printscript-net:
+    external: true
