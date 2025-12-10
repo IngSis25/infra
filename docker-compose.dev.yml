@@ -86,9 +86,9 @@ services:
     image: postgres:15
     container_name: snippet-db
     environment:
-      POSTGRES_DB: snippetdb
-      POSTGRES_USER: snippetuser
-      POSTGRES_PASSWORD: snippetpass
+      POSTGRES_DB: snippet-serviceDB
+      POSTGRES_USER: Printscript
+      POSTGRES_PASSWORD: Ingenieria2025
     networks:
       - printscript-net
     # ports:
@@ -115,4 +115,5 @@ services:
 
 networks:
   printscript-net:
-    external: true
+    driver: bridge
+
