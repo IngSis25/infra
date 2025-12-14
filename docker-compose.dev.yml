@@ -113,11 +113,14 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
+
+      AUTH_SERVER_URI: dev-2dc74voarsscuyp0.us.auth0.com
+
+      AUTH0_AUDIENCE: https://dev-2dc74voarsscuyp0.us.auth0.com/api/v2/
+
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
       NEW_RELIC_APP_NAME: snippet-service
 
-      # si tu snippet-service consume asset-service:
-      ASSET_SERVICE_URL: http://asset-service:8080
     depends_on:
       snippet-db:
         condition: service_healthy
