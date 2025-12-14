@@ -174,11 +174,11 @@ services:
   # ======================
   asset-service:
     image: ghcr.io/austral-ingsis/snippet-asset-service:latest
-    container_name: asset-service
     environment:
-      AZURE_HOST: "http://azurite:10000"
-      NEW_RELIC_AGENT_ENABLED: "false"
+      AZURE_HOST: "http://azurite"
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
       NEW_RELIC_APP_NAME: "asset-service"
+      NEW_RELIC_AGENT_ENABLED: "false"
     depends_on:
       - azurite
     networks:
@@ -195,11 +195,14 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
+
       AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
       NEW_RELIC_APP_NAME: runner-service
+
     depends_on:
       redis:
         condition: service_started
