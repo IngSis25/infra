@@ -13,6 +13,7 @@ services:
       - authorization-service
       - snippet-service
       - runner-service
+      - asset-service
     networks:
       - printscript-net
     restart: unless-stopped
@@ -21,7 +22,10 @@ services:
     image: ghcr.io/ingsis25/printscript-ui-dev:latest
     container_name: ui-service
     expose:
-      - "80"
+      - "4173"
+    # opcional para debug directo desde afuera:
+    # ports:
+    #   - "4173:4173"
     networks:
       - printscript-net
     restart: unless-stopped
@@ -29,30 +33,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    ports:
+      - "6379:6379" # opcional, para debug
     networks:
       - printscript-net
     restart: unless-stopped
-
-  authorization-service:
-    image: ghcr.io/ingsis25/authorization-service:dev
-    container_name: authorization-service
-
-    environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_AUTHDB}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_AUTHDB}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_AUTHDB}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
-      AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
-      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
-      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
-    depends_on:
-      - auth-db
-      - redis
-    networks:
-      - printscript-net
 
   auth-db:
     image: postgres:15
@@ -61,61 +46,137 @@ services:
       POSTGRES_DB: authdb
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: authpass
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     networks:
       - printscript-net
+    restart: unless-stopped
 
-
-  snippet-service:
-    image: ghcr.io/ingsis25/snippet-service:dev
-    container_name: snippet-service
-    # ports:
-    #   - "8081:8080"
+  authorization-service:
+    image: ghcr.io/ingsis25/authorization-service:dev
+    container_name: authorization-service
     environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_SNIPPET}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_SNIPPET}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_SNIPPET}
+      # si querés evitar .env ambiguo, dejalo explícito:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
+      SPRING_DATASOURCE_USERNAME: authuser
+      SPRING_DATASOURCE_PASSWORD: authpass
+
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
+      NEW_RELIC_APP_NAME: authorization-service
+
+      AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
+      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
+      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
     depends_on:
-      - snippet-db
-      - redis
+      auth-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - printscript-net
+    restart: unless-stopped
 
   snippet-db:
     image: postgres:15
     container_name: snippet-db
     environment:
-      POSTGRES_DB: snippet-serviceDB
-      POSTGRES_USER: Printscript
-      POSTGRES_PASSWORD: Ingenieria2025
+      POSTGRES_DB: snippetdb
+      POSTGRES_USER: snippetuser
+      POSTGRES_PASSWORD: snippetpass
+    volumes:
+      - snippet-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snippetuser -d snippetdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     networks:
       - printscript-net
-    # ports:
-    #   - "5433:5432"
+    restart: unless-stopped
 
+  snippet-service:
+    image: ghcr.io/ingsis25/snippet-service:dev
+    container_name: snippet-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://snippet-db:5432/snippetdb
+      SPRING_DATASOURCE_USERNAME: snippetuser
+      SPRING_DATASOURCE_PASSWORD: snippetpass
+
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_APP_NAME: snippet-service
+
+      # si tu snippet-service consume asset-service:
+      ASSET_SERVICE_URL: http://asset-service:8080
+    depends_on:
+      snippet-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - printscript-net
+    restart: unless-stopped
+
+  # Si runner NO usa DB, ok.
+  # Si runner usa DB, agregamos runner-db igual que los otros.
   runner-service:
     image: ghcr.io/ingsis25/runner-service:dev
     container_name: runner-service
-    # ports:
-    #   - "8082:8080"
     environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_RUNNER}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_RUNNER}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_RUNNER}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
+      NEW_RELIC_APP_NAME: runner-service
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+    networks:
+      - printscript-net
+    restart: unless-stopped
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    hostname: azurite
+    restart: unless-stopped
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite-data:/workspace
     networks:
       - printscript-net
 
+  asset-service:
+    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
+    container_name: asset-service
+    environment:
+      AZURE_HOST: "http://azurite:10000"
+      NEW_RELIC_AGENT_ENABLED: "false"
+      NEW_RELIC_APP_NAME: "asset-service"
+    depends_on:
+      - azurite
+    networks:
+      - printscript-net
+    restart: unless-stopped
 
 networks:
   printscript-net:
     driver: bridge
 
+volumes:
+  auth-db-data:
+  snippet-db-data:
+  azurite-data:
