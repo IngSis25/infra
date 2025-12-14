@@ -82,6 +82,8 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
+      AUTH_AUDIENCE: https://snippet-searcher.api
+
       AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
