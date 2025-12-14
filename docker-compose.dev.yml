@@ -1,6 +1,9 @@
 version: "3.9"
 
 services:
+  # ======================
+  # Reverse Proxy (NGINX)
+  # ======================
   reverse-proxy:
     image: nginx:alpine
     container_name: reverse-proxy
@@ -20,7 +23,9 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- UI ---
+  # ======================
+  # UI
+  # ======================
   ui-service:
     image: ghcr.io/ingsis25/printscript-ui-dev:latest
     container_name: ui-service
@@ -30,17 +35,21 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Redis ---
+  # ======================
+  # Redis
+  # ======================
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
-      - "6379:6379" # opcional para debug desde afuera
+      - "6379:6379"
     networks:
       - printscript-net
     restart: unless-stopped
 
-  # --- AUTH DB ---
+  # ======================
+  # AUTH DB
+  # ======================
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -59,29 +68,29 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Authorization Service ---
+  # ======================
+  # AUTHORIZATION SERVICE
+  # ======================
   authorization-service:
     image: ghcr.io/ingsis25/authorization-service:dev
     container_name: authorization-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authorization-serviceDB
       SPRING_DATASOURCE_USERNAME: Printscript
-      SPRING_DATASOURCE_PASSWORD: authpass
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_AUTHDB}
 
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
-      # ✅ Auth0 issuer FIX (SIN slash final)
       AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
-      # Auth0 Management (si tu servicio lo usa)
       AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
       AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
       AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
 
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
+      NEW_RELIC_APP_NAME: authorization-service
     depends_on:
       auth-db:
         condition: service_healthy
@@ -91,7 +100,9 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- SNIPPET DB ---
+  # ======================
+  # SNIPPET DB
+  # ======================
   snippet-db:
     image: postgres:15
     container_name: snippet-db
@@ -102,7 +113,7 @@ services:
     volumes:
       - snippet-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U snippetuser -d snippetdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME_SNIPPET} -d snippet-serviceDB"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -110,12 +121,14 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Snippet Service ---
+  # ======================
+  # SNIPPET SERVICE
+  # ======================
   snippet-service:
     image: ghcr.io/ingsis25/snippet-service:dev
     container_name: snippet-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://snippet-db:5432/snippetdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://snippet-db:5432/snippet-serviceDB
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_SNIPPET}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_SNIPPET}
 
@@ -125,12 +138,11 @@ services:
       AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
-      # Estos 2 los vi en tus composes de repos (usan AUTH_AUDIENCE y AUTH_CLIENT_ID)
       AUTH_AUDIENCE: ${AUTH_AUDIENCE}
       AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
 
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
+      NEW_RELIC_APP_NAME: snippet-service
     depends_on:
       snippet-db:
         condition: service_healthy
@@ -140,7 +152,9 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Azurite ---
+  # ======================
+  # AZURITE
+  # ======================
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     container_name: azurite
@@ -155,7 +169,9 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Asset Service ---
+  # ======================
+  # ASSET SERVICE
+  # ======================
   asset-service:
     image: ghcr.io/austral-ingsis/snippet-asset-service:latest
     container_name: asset-service
@@ -169,7 +185,9 @@ services:
       - printscript-net
     restart: unless-stopped
 
-  # --- Runner Service ---
+  # ======================
+  # RUNNER SERVICE
+  # ======================
   runner-service:
     image: ghcr.io/ingsis25/runner-service:dev
     container_name: runner-service
@@ -181,7 +199,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-      NEW_RELIC_APP_NAME: Snippet Searcher
+      NEW_RELIC_APP_NAME: runner-service
     depends_on:
       redis:
         condition: service_started
