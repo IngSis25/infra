@@ -114,7 +114,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
 
-      AUTH_SERVER_URI: dev-2dc74voarsscuyp0.us.auth0.com
+      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
 
       AUTH0_AUDIENCE: https://dev-2dc74voarsscuyp0.us.auth0.com/api/v2/
 
