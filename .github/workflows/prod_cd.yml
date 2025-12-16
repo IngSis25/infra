@@ -1,4 +1,4 @@
-name: "Continuous Deployment"
+name: "Continuous Deployment - Prod"
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   deploy_to_vm:
@@ -26,14 +29,13 @@ jobs:
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.VM_KEY_PROD }}
 
-          # 👇 MUY IMPORTANTE: pasar la env var al host remoto
           envs: CHANGED_SERVICE
 
           script: |
             cd infra
             git pull origin main
 
-            echo ${{ secrets.GITHUB_TOKEN }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login -u ${{ github.actor }} --password-stdin ghcr.io
 
             if [ -z "${CHANGED_SERVICE}" ] || [ "${CHANGED_SERVICE}" = "infra" ]; then
               echo "Redeploy completo de infra"
