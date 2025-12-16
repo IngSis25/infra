@@ -84,8 +84,8 @@ services:
 
       AUTH_AUDIENCE: https://snippet-searcher.api
 
-      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
+      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/.well-known/jwks.json
 
       AUTH0_MANAGEMENT_AUDIENCE: ${AUTH0_MANAGEMENT_AUDIENCE}
       AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
@@ -137,8 +137,8 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
-      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
+      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/.well-known/jwks.json
 
       AUTH_AUDIENCE: ${AUTH_AUDIENCE}
       AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
@@ -201,8 +201,8 @@ services:
 
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
 
-      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com
+      AUTH_SERVER_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://dev-2dc74voarsscuyp0.us.auth0.com/.well-known/jwks.json
 
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
       NEW_RELIC_APP_NAME: runner-service
