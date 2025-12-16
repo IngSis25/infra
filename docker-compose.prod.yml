@@ -8,7 +8,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+    - ./conf.d/nginx-prod.conf:/etc/nginx/conf.d/default.conf:ro
       # si tenés archivos estáticos extra:
       # - ./static/:/usr/share/nginx/html:ro
       # si usás certs de letsencrypt en la VM:
