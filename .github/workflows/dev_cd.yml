@@ -8,6 +8,10 @@ on:
 jobs:
   deploy_to_vm:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - name: Determine service
         id: service
@@ -18,22 +22,27 @@ jobs:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_HOST_DEV }}
-          username: ${{ secrets.VM_USER_DEV }}
-          key: ${{ secrets.VM_KEY_DEV }}
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_KEY }}
+
+          # 👇 exporta CHANGED_SERVICE al servidor remoto
+          envs: CHANGED_SERVICE
+
           script: |
             cd infra
             git pull origin dev
 
             # Login a GHCR como root para usar sudo docker
-            echo ${{ secrets.GITHUB_TOKEN }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
+            echo "${{ secrets.GHCR_PAT }}" | sudo docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
-    
-            if [ "${CHANGED_SERVICE}" = "infra" ]; then
+            if [ -z "${CHANGED_SERVICE}" ] || [ "${CHANGED_SERVICE}" = "infra" ]; then
+              echo "Redeploy completo de infra (dev)"
               sudo docker compose -f docker-compose.dev.yml down
               sudo docker compose -f docker-compose.dev.yml pull
               sudo docker compose -f docker-compose.dev.yml up -d
             else
-              sudo docker compose -f docker-compose.dev.yml pull ${CHANGED_SERVICE}-service
-              sudo docker compose -f docker-compose.dev.yml up -d ${CHANGED_SERVICE}-service
+              echo "Redeploy solo de ${CHANGED_SERVICE}-service (dev)"
+              sudo docker compose -f docker-compose.dev.yml pull "${CHANGED_SERVICE}-service"
+              sudo docker compose -f docker-compose.dev.yml up -d "${CHANGED_SERVICE}-service"
             fi
