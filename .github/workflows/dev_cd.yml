@@ -34,7 +34,7 @@ jobs:
             git pull origin dev
 
             # Login a GHCR como root para usar sudo docker
-            echo ${{ secrets.GHCR_PAT }} | sudo -i docker login -u ${{ secrets.GHCR_USERNAME }} --password-stdin ghcr.io
+            echo "${{ secrets.GHCR_PAT }}" | sudo docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
             if [ -z "${CHANGED_SERVICE}" ] || [ "${CHANGED_SERVICE}" = "infra" ]; then
               echo "Redeploy completo de infra (dev)"

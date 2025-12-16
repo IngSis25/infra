@@ -32,7 +32,7 @@ jobs:
             cd infra
             git pull origin main
 
-            echo ${{ secrets.GITHUB_TOKEN }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
+            echo ${{ secrets.GHCR_PAT }} | sudo -i docker login -u ${{ github.actor }} --password-stdin ghcr.io
 
             if [ -z "${CHANGED_SERVICE}" ] || [ "${CHANGED_SERVICE}" = "infra" ]; then
               echo "Redeploy completo de infra"
